@@ -2,6 +2,10 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
 import type { AnalysisResult, AlertRule } from '@/types'
+
+export type SortKey = 'time' | 'level'
+export type SortOrder = 'asc' | 'desc'
+
 export const useLogStore = defineStore('log', () => {
   const result = ref<AnalysisResult | null>(null)
   const loading = ref(false)
@@ -12,6 +16,13 @@ export const useLogStore = defineStore('log', () => {
     { id:2, name:'异常流量', type:'count', threshold:200, enabled:false },
     { id:3, name:'关键词命中', type:'keyword', threshold:0, enabled:true }
   ])
+
+  // 日志流面板的定位条件：返回（重新生成/检测）后需保持，不随请求重置
+  const selectedLevels = ref<string[]>([])
+  const selectedSources = ref<string[]>([])
+  const messageKeyword = ref('')
+  const sortBy = ref<SortKey>('time')
+  const sortOrder = ref<SortOrder>('desc')
 
   async function generate() {
     loading.value=true
@@ -26,5 +37,13 @@ export const useLogStore = defineStore('log', () => {
     finally { loading.value=false }
   }
 
-  return { result, loading, searchQuery, logType, rules, generate, detect }
+  function resetFilters() {
+    selectedLevels.value = []
+    selectedSources.value = []
+    messageKeyword.value = ''
+  }
+
+  return { result, loading, searchQuery, logType, rules,
+    selectedLevels, selectedSources, messageKeyword, sortBy, sortOrder,
+    generate, detect, resetFilters }
 })
