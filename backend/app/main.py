@@ -179,7 +179,7 @@ def analyze_logs(logs_data, rules, query):
             })
 
     return {
-        "logs": logs[:200],
+        "logs": logs,
         "windows": windows,
         "anomalies": anomalies,
         "alerts": alerts[:20],

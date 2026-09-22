@@ -1,0 +1,52 @@
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import axios from 'axios';
+export const useLogStore = defineStore('log', () => {
+    const result = ref(null);
+    const loading = ref(false);
+    const searchQuery = ref('');
+    const logType = ref('nginx');
+    const rules = ref([
+        { id: 1, name: '高频ERROR', type: 'level', threshold: 5, enabled: true },
+        { id: 2, name: '异常流量', type: 'count', threshold: 200, enabled: false },
+        { id: 3, name: '关键词命中', type: 'keyword', threshold: 0, enabled: true }
+    ]);
+    // 日志流面板的定位条件：全部放在 store 中，生成 / 检测返回后仍保持
+    const tableKeyword = ref('');
+    const tableLevels = ref([]);
+    const tableSources = ref([]);
+    const tableSortBy = ref('time');
+    const tableSortDesc = ref(true);
+    function resetTableFilters() {
+        tableKeyword.value = '';
+        tableLevels.value = [];
+        tableSources.value = [];
+    }
+    async function generate() {
+        loading.value = true;
+        try {
+            const { data } = await axios.post('/api/generate', { type: logType.value, count: 1000 });
+            result.value = data;
+        }
+        finally {
+            loading.value = false;
+        }
+    }
+    async function detect() {
+        if (!result.value)
+            return;
+        loading.value = true;
+        try {
+            const { data } = await axios.post('/api/detect', { logs: result.value.logs, rules: rules.value.filter(r => r.enabled), query: searchQuery.value });
+            result.value = data;
+        }
+        finally {
+            loading.value = false;
+        }
+    }
+    return {
+        result, loading, searchQuery, logType, rules,
+        tableKeyword, tableLevels, tableSources, tableSortBy, tableSortDesc,
+        resetTableFilters, generate, detect
+    };
+});

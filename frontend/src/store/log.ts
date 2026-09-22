@@ -13,6 +13,19 @@ export const useLogStore = defineStore('log', () => {
     { id:3, name:'关键词命中', type:'keyword', threshold:0, enabled:true }
   ])
 
+  // 日志流面板的定位条件：全部放在 store 中，生成 / 检测返回后仍保持
+  const tableKeyword = ref('')
+  const tableLevels = ref<string[]>([])
+  const tableSources = ref<string[]>([])
+  const tableSortBy = ref<'time' | 'level'>('time')
+  const tableSortDesc = ref(true)
+
+  function resetTableFilters() {
+    tableKeyword.value = ''
+    tableLevels.value = []
+    tableSources.value = []
+  }
+
   async function generate() {
     loading.value=true
     try { const {data} = await axios.post('/api/generate',{type:logType.value,count:1000}) ; result.value=data }
@@ -26,5 +39,9 @@ export const useLogStore = defineStore('log', () => {
     finally { loading.value=false }
   }
 
-  return { result, loading, searchQuery, logType, rules, generate, detect }
+  return {
+    result, loading, searchQuery, logType, rules,
+    tableKeyword, tableLevels, tableSources, tableSortBy, tableSortDesc,
+    resetTableFilters, generate, detect
+  }
 })
